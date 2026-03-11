@@ -24,4 +24,6 @@ if [ -d /data/.linuxbrew ] && [ ! -L /home/linuxbrew/.linuxbrew ]; then
 fi
 
 # ── Launch ──
-exec gosu openclaw node src/server.js
+# Use tini as PID 1 to properly reap zombie processes and forward signals.
+# gosu drops privileges to the openclaw user, then tini becomes the init process.
+exec gosu openclaw tini -- node src/server.js

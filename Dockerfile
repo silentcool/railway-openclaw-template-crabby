@@ -76,6 +76,7 @@ RUN apt-get update \
     gosu \
     procps \
     python3 \
+    tini \
     build-essential \
   && rm -rf /var/lib/apt/lists/*
 
