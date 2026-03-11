@@ -1,2 +1,2 @@
 [phases.setup]
-aptPkgs = ["tini"]
+nixPkgs = ["tini"]
