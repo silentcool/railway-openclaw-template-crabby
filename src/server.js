@@ -2088,6 +2088,30 @@ app.use(async (req, res) => {
     return res.redirect("/setup");
   }
 
+  // Protect the gateway UI with the same SETUP_PASSWORD used for /setup.
+  // Without this, anyone with the public URL gets full gateway access because
+  // the proxy auto-injects the bearer token on every request.
+  if (SETUP_PASSWORD && isConfigured()) {
+    // Allow health checks through without auth
+    if (req.path === "/healthz" || req.path === "/setup/healthz") {
+      // fall through
+    } else {
+      const authHeader = req.headers.authorization || "";
+      if (!authHeader.startsWith("Basic ")) {
+        res.set("WWW-Authenticate", 'Basic realm="OpenClaw Gateway"');
+        return res.status(401).send("Authentication required");
+      }
+      const encoded = authHeader.slice(6);
+      const decoded = Buffer.from(encoded, "base64").toString("utf8");
+      const idx = decoded.indexOf(":");
+      const password = idx >= 0 ? decoded.slice(idx + 1) : "";
+      if (password !== SETUP_PASSWORD) {
+        res.set("WWW-Authenticate", 'Basic realm="OpenClaw Gateway"');
+        return res.status(401).send("Invalid password");
+      }
+    }
+  }
+
   if (isConfigured()) {
     try {
       await ensureGatewayRunning();
